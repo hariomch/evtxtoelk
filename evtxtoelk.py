@@ -2,6 +2,7 @@ import contextlib
 import mmap
 import traceback
 import json
+import os
 import argparse
 from collections import OrderedDict
 from datetime import datetime
@@ -136,11 +137,17 @@ if __name__ == "__main__":
     # Create argument parser
     parser = argparse.ArgumentParser()
     # Add arguments
-    parser.add_argument('evtxfile', help="Evtx file to parse")
+    parser.add_argument('evtxfile_or_dir', help="Evtx file or directory to parse")
     parser.add_argument('elk_ip', default="localhost", help="IP (and port) of ELK instance")
     parser.add_argument('-i', default="hostlogs", help="ELK index to load data into")
     parser.add_argument('-s', default=500, help="Size of queue")
     parser.add_argument('-meta', default={}, type=json.loads, help="Metadata to add to records")
     # Parse arguments and call evtx to elk class
     args = parser.parse_args()
-    EvtxToElk.evtx_to_elk(args.evtxfile, args.elk_ip, elk_index=args.i, bulk_queue_len_threshold=int(args.s), metadata=args.meta)
+    if os.path.isfile(args.evtxfile_or_dir):
+        EvtxToElk.evtx_to_elk(args.evtxfile_or_dir, args.elk_ip, elk_index=args.i, bulk_queue_len_threshold=int(args.s), metadata=args.meta)
+    else:
+        file_list = [f for f in os.listdir(args.evtxfile_or_dir) if os.path.isfile(os.path.join(args.evtxfile_or_dir))]
+        for evtxfile in file_list:
+            if evtxfile.endswith('.evtx'):
+                EvtxToElk.evtx_to_elk(evtxfile, args.elk_ip, elk_index=args.i, bulk_queue_len_threshold=int(args.s), metadata=args.meta)
