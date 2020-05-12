@@ -145,9 +145,11 @@ if __name__ == "__main__":
     # Parse arguments and call evtx to elk class
     args = parser.parse_args()
     if os.path.isfile(args.evtxfile_or_dir):
+        print(f"Processing file {args.evtxfile_or_dir}")
         EvtxToElk.evtx_to_elk(args.evtxfile_or_dir, args.elk_ip, elk_index=args.i, bulk_queue_len_threshold=int(args.s), metadata=args.meta)
     else:
-        file_list = [f for f in os.listdir(args.evtxfile_or_dir) if os.path.isfile(os.path.join(args.evtxfile_or_dir))]
+        file_list = [os.path.join(args.evtxfile_or_dir, f) for f in os.listdir(args.evtxfile_or_dir) if os.path.isfile(os.path.join(args.evtxfile_or_dir, f))]
         for evtxfile in file_list:
             if evtxfile.endswith('.evtx'):
+                print(f"Processing file {evtxfile}")
                 EvtxToElk.evtx_to_elk(evtxfile, args.elk_ip, elk_index=args.i, bulk_queue_len_threshold=int(args.s), metadata=args.meta)
