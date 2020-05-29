@@ -96,7 +96,6 @@ class EvtxToElk:
                         #bulk_queue.append(event_record)
                         event_data = json.loads(json.dumps(log_line))
                         event_data["_index"] = elk_index
-                        event_data["_type"] = elk_index
                         event_data["meta"] = metadata
                         bulk_queue.append(event_data)
 
