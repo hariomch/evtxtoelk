@@ -46,14 +46,22 @@ class EvtxToElk:
                         log_line['@timestamp'] = str(datetime.now().isoformat())
                         log_line["Event"]["System"]["TimeCreated"]["@SystemTime"] = str(date.isoformat())
 
+                        # del log_line["System"] 
+
                         # Process the data field to be searchable
                         data = ""
                         if log_line.get("Event") is not None:
-                            data = log_line.get("Event")
-                            if log_line.get("Event").get("EventData") is not None:
-                                data = log_line.get("Event").get("EventData")
-                                if log_line.get("Event").get("EventData").get("Data") is not None:
-                                    data = log_line.get("Event").get("EventData").get("Data")
+                            log_line["winlog"] = log_line.pop("Event")
+                            log_line["winlog"]["time_created"] = log_line["winlog"]["System"]["TimeCreated"].pop("@SystemTime")
+                            del log_line["winlog"]["System"]["TimeCreated"]
+                            data = log_line.get("winlog")
+                            if log_line.get("winlog").get("EventData") is not None:
+                                log_line["winlog"]["event_data"] = log_line["winlog"].pop("EventData")
+                                data = log_line.get("winlog").get("event_data")
+                                if log_line.get("winlog").get("event_data").get("Data") is not None:
+                                    log_line["winlog"]["event_data"] = log_line["winlog"]["event_data"].pop("Data")
+                                    data = log_line.get("winlog").get("event_data")
+                                    
                                     if isinstance(data, list):
                                         contains_event_data = True
                                         data_vals = {}
@@ -64,25 +72,22 @@ class EvtxToElk:
                                                         str(dataitem.get("#text")))
                                             except:
                                                 pass
-                                        log_line["Event"]["EventData"]["Data"] = data_vals
+                                        log_line["winlog"]["event_data"] = data_vals
                                     else:
                                         if isinstance(data, OrderedDict):
-                                            log_line["Event"]["EventData"]["RawData"] = json.dumps(data)
+                                            log_line["winlog"]["event_data"]["RawData"] = json.dumps(data)
                                         else:
-                                            log_line["Event"]["EventData"]["RawData"] = str(data)
-                                        del log_line["Event"]["EventData"]["Data"]
+                                            log_line["winlog"]["event_data"]["RawData"] = str(data)
                                 else:
                                     if isinstance(data, OrderedDict):
-                                        log_line["Event"]["RawData"] = json.dumps(data)
+                                        log_line["winlog"]["RawData"] = json.dumps(data)
                                     else:
-                                        log_line["Event"]["RawData"] = str(data)
-                                    del log_line["Event"]["EventData"]
+                                        log_line["winlog"]["RawData"] = str(data)
                             else:
                                 if isinstance(data, OrderedDict):
                                     log_line = dict(data)
                                 else:
                                     log_line["RawData"] = str(data)
-                                    del log_line["Event"]
                         else:
                             pass
 
